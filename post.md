@@ -9,6 +9,8 @@ Here's a quick demo of the app which we're going to build :
 
 ![](https://blog.cloudboost.io/content/images/2015/06/IonicApp-1.PNG)
 
+
+
 ####Installing Ionic Framework :
 
 
@@ -47,7 +49,7 @@ To run your new app in the browser, type in `ionic serve` and it'll run your app
 
 Now, We need to have a textbox that takes in a text which is a "Post", and display the feed on the screen. 
 
-Navigate to `www\templates\tab-dash.html` which is your dashboard screen
+Navigate to `www\templates\tab-dash.html` which is your dashboard screen. 
 
 Edit the HTML to add a textbox : 
 
@@ -109,8 +111,109 @@ Here we will implement a feature to save a post in CloudBoost database.
 * Once a new table is created, You can start hacking with our JavaScript SDK. Download our JavaScript SDK from [here](https://docs.cloudboost.io)
 
 
+######Step 3 : Integrate CloudBoost.io with your Ionic App.
+
+In the `<head>` section of `index.html`, link the CloudBoost JavaScript SDK. 
+
+`<script src="https://cloudboost.io/js-sdk/1.0.0.js"></script>`
+
+*You can download the SDK and link it locally into your app too. It's a better option since SDK will not load with every app launch.*
+
+Once you've linked the SDK. You need to Initialize your new CloudBoost App. In the `js` folder you'll find the file called  *app.js* and You can add this code in the `run` function of angular inside of that file which will initialize your new CloudBoost App. 
+
+`var appId="YOUR APP ID"; //This should be your AppID`
+
+`var appKey="YOUR CLIENT KEY"; //this should be your AppKey`
+
+Once this is done, You can now call CB.CloudApp.init() function which will init your app. 
+
+`CB.CloudApp.init(appId,appKey);`
+
+######Step 4 : Saving Post
+
+To save a post you need to navigate to controllers file in js directory. Look for `DashCtrl` and have the save function to save the post 
+
+	$scope.savePost = function(text){
+      var post = new CB.CloudObject('feed');
+      post.set('text',text);
+      post.save({
+        success : function (post){
+          //success
+        },error : function(error){
+          var myPopup = $ionicPopup.show({
+            title: 'Oops! We cant save the post right now.',
+            scope: $scope,
+            buttons: [
+              { text: 'Ok' }
+            ]
+          });
+        }
+      });
+    }
+    
+Here you create the new `CloudObject` of type `feed` (TableName) and call the `save` function of CloudObject to save the new feed to the table. 
+
+######Step 5 : Show the list of posts on dashboard
+
+To see the list of posts when you launch the app, You need to create an angular `init` function and query posts from the feed table. 
+
+	  $scope.init = function(){
+        var query = new CB.CloudQuery('feed');
+        query.orderByDesc('createdBy');
+        query.find({
+          success : function(list){
+              //list is an array of CloudObject. 
+              $scope.posts = list;
+              
+          }, error : function(error){
+             var myPopup = $ionicPopup.show({
+              title: 'Oops! We cannot get the list of posts right now.',
+              scope: $scope,
+              buttons: [
+                { text: 'Ok' }
+              ]
+            });
+          }
+        });
+    }
+    
+Now you need to bing the `posts` array to HTML by using Angular ngRepeat. 
+
+	<div class="list card" ng-repeat="post in posts">
+      <div class="item item-divider">{{post.createdAt}}</div>
+      <div class="item item-body">
+        <div>
+          {{post.get('text')}}
+        </div>
+      </div>
+    </div>
+    
+    
+ 
+    
+######Step 6 : Make your app real-time.
+
+To refresh the app automatically when someone anywhere in the world add's a new "Post" to the feed table, you need to implement the real-time features of CloudBoost.io. Implementing real-time with CloudBoost.io just few lines of code. You need to listen to `on` event of CloudObject class. 
+
+	  CB.CloudObject.on('feed','created', function(post){
+        $scope.posts = [post].concat($scope.posts);
+      });
+    
+Place the above code in the "init" function of dashboard controller. 
+
+####You're done! 
+
+Congratulations on creating your first Ionic App with CloudBoost.io. 
+
+Here's a quick demo of your new app : 
+
+![](https://blog.cloudboost.io/content/images/2015/06/IonicApp-1.PNG)
 
 
+We have checked all the code into GitHub. You can download the code and if you're adding new features in, Feel free to send us a pull-request. ;) 
+
+**GitHub URL :** https://github.com/CloudBoost/sample-ionic-social-network
+
+Let us know if you've liked the small quickstart and yes, Share the love. 
 
 
-. 
